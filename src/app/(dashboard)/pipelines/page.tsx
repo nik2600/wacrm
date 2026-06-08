@@ -30,8 +30,8 @@ import { toast } from "sonner";
 // Spec-defined seed — name and color per the product spec.
 const SPEC_DEFAULT_STAGES = [
   { name: "New Lead", color: "#3b82f6", position: 0 }, // blue
-  { name: "Qualified", color: "#eab308", position: 1 }, // yellow
-  { name: "Proposal Sent", color: "#f97316", position: 2 }, // orange
+  { name: "Qualified", color: "#a16207", position: 1 },
+  { name: "Proposal Sent", color: "#b45309", position: 2 },
   { name: "Negotiation", color: "#8b5cf6", position: 3 }, // purple
   { name: "Won", color: "#22c55e", position: 4 }, // green
 ];
@@ -162,7 +162,6 @@ export default function PipelinesPage() {
     if (!selectedPipelineId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setStages([]);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDeals([]);
       return;
     }

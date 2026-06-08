@@ -27,6 +27,32 @@ export const LEAD_CATEGORY_COLORS: Record<LeadCategory, string> = {
   Joker: '#f59e0b',
 }
 
+export const DEFAULT_CATEGORY_BY_STAGE: Record<LeadStage, LeadCategory> = {
+  DNP: 'Joker',
+  Followup: 'Queen',
+  'Meeting Scheduled': 'King',
+  'Send Proposal': 'Ace',
+  Onboarded: 'Ace',
+  Rejected: 'Joker',
+}
+
+export function defaultCategoryForStage(stage: LeadStage): LeadCategory {
+  return DEFAULT_CATEGORY_BY_STAGE[stage]
+}
+
+export function stepCategoryForStage(stage: LeadStage): LeadCategory {
+  return defaultCategoryForStage(stage)
+}
+
+export function normalizeLeadStageCategory<T extends Pick<Contact, 'stage' | 'category'>>(
+  lead: T,
+): T {
+  return {
+    ...lead,
+    category: stepCategoryForStage(lead.stage),
+  }
+}
+
 export interface FollowupGroups {
   overdue: Contact[]
   dueToday: Contact[]

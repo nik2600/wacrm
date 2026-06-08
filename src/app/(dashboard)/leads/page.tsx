@@ -19,6 +19,7 @@ import {
   LEAD_CATEGORY_COLORS,
   LEAD_STAGES,
   LEAD_STAGE_COLORS,
+  normalizeLeadStageCategory,
 } from '@/lib/leads'
 import { LeadBoard } from '@/components/leads/lead-board'
 import { ContactDetailView } from '@/components/contacts/contact-detail-view'
@@ -69,7 +70,13 @@ export default function LeadsPage() {
       .order('created_at', { ascending: false })
 
     if (error) toast.error('Failed to load leads')
-    else setLeads((data ?? []) as Contact[])
+    else {
+      setLeads(
+        ((data ?? []) as Contact[]).map((lead) =>
+          normalizeLeadStageCategory(lead),
+        ),
+      )
+    }
     setLoading(false)
   }, [supabase])
 
@@ -125,15 +132,17 @@ export default function LeadsPage() {
   }
 
   const moveLead = useCallback(
-    async (leadId: string, stage: LeadStage) => {
+    async (leadId: string, stage: LeadStage, category: LeadCategory) => {
       const previous = leads
       setLeads((current) =>
-        current.map((lead) => (lead.id === leadId ? { ...lead, stage } : lead)),
+        current.map((lead) =>
+          lead.id === leadId ? { ...lead, stage, category } : lead,
+        ),
       )
 
       const { error } = await supabase
         .from('contacts')
-        .update({ stage, updated_at: new Date().toISOString() })
+        .update({ stage, category, updated_at: new Date().toISOString() })
         .eq('id', leadId)
 
       if (error) {

@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { Contact } from '@/types'
 import {
+  defaultCategoryForStage,
   filterLeads,
   fromDateTimeLocal,
   groupFollowups,
+  normalizeLeadStageCategory,
   summarizeLeads,
 } from './leads'
 
@@ -48,6 +50,23 @@ describe('groupFollowups', () => {
 })
 
 describe('lead helpers', () => {
+  it('defaults category step-wise from lead stage', () => {
+    expect(defaultCategoryForStage('DNP')).toBe('Joker')
+    expect(defaultCategoryForStage('Followup')).toBe('Queen')
+    expect(defaultCategoryForStage('Meeting Scheduled')).toBe('King')
+    expect(defaultCategoryForStage('Send Proposal')).toBe('Ace')
+    expect(defaultCategoryForStage('Onboarded')).toBe('Ace')
+    expect(defaultCategoryForStage('Rejected')).toBe('Joker')
+  })
+
+  it('normalizes stale category values from the current stage', () => {
+    expect(
+      normalizeLeadStageCategory(
+        contact({ stage: 'Followup', category: 'Joker' }),
+      ).category,
+    ).toBe('Queen')
+  })
+
   it('filters by search, stage, and category together', () => {
     const leads = [
       contact({ id: '1', name: 'Ada Lovelace', stage: 'Followup', category: 'Ace' }),

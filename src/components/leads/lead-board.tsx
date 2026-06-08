@@ -15,16 +15,17 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { CalendarClock, Mail, Phone } from 'lucide-react'
-import type { Contact, LeadStage } from '@/types'
+import type { Contact, LeadCategory, LeadStage } from '@/types'
 import {
   LEAD_CATEGORY_COLORS,
   LEAD_STAGE_COLORS,
   LEAD_STAGES,
+  stepCategoryForStage,
 } from '@/lib/leads'
 
 interface LeadBoardProps {
   leads: Contact[]
-  onLeadMoved: (leadId: string, stage: LeadStage) => void
+  onLeadMoved: (leadId: string, stage: LeadStage, category: LeadCategory) => void
   onLeadOpen: (leadId: string) => void
 }
 
@@ -62,8 +63,11 @@ export function LeadBoard({
     const leadId = String(event.active.id)
     const stage = String(event.over.id) as LeadStage
     const lead = leads.find((item) => item.id === leadId)
-    if (!lead || !LEAD_STAGES.includes(stage) || lead.stage === stage) return
-    onLeadMoved(leadId, stage)
+    if (!lead || !LEAD_STAGES.includes(stage)) return
+
+    const category = stepCategoryForStage(stage)
+    if (lead.stage === stage && lead.category === category) return
+    onLeadMoved(leadId, stage, category)
   }
 
   return (
