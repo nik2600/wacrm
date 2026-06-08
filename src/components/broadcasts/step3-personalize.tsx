@@ -43,6 +43,8 @@ const SAMPLE_CONTACT: Contact = {
   phone: '+1234567890',
   email: 'john@example.com',
   company: 'Acme Corp',
+  category: 'Joker',
+  stage: 'DNP',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };

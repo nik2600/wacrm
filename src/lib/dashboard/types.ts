@@ -15,6 +15,14 @@ export interface MetricsBundle {
   messagesSentToday: MetricDelta
 }
 
+export interface LeadDashboardData {
+  totalLeads: number
+  dueFollowups: number
+  byStage: Record<import('@/types').LeadStage, number>
+  byCategory: Record<import('@/types').LeadCategory, number>
+  byCampaign: { name: string; count: number }[]
+}
+
 export interface ConversationsSeriesPoint {
   day: string // YYYY-MM-DD local
   incoming: number

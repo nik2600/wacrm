@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
-import type { Contact, Tag, ContactTag } from '@/types';
+import type { Contact, Tag, ContactTag, LeadCategory, LeadStage } from '@/types';
+import {
+  fromDateTimeLocal,
+  LEAD_CATEGORIES,
+  LEAD_STAGES,
+  toDateTimeLocal,
+} from '@/lib/leads';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +21,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 
@@ -40,6 +54,14 @@ export function ContactForm({
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
+  const [category, setCategory] = useState<LeadCategory>('Joker');
+  const [stage, setStage] = useState<LeadStage>('DNP');
+  const [nextFollowup, setNextFollowup] = useState('');
+  const [leadNotes, setLeadNotes] = useState('');
+  const [campaign, setCampaign] = useState('');
+  const [platform, setPlatform] = useState('');
+  const [adName, setAdName] = useState('');
+  const [leadSource, setLeadSource] = useState('');
   const [saving, setSaving] = useState(false);
 
   const [tags, setTags] = useState<Tag[]>([]);
@@ -52,6 +74,14 @@ export function ContactForm({
       setPhone(contact?.phone ?? '');
       setEmail(contact?.email ?? '');
       setCompany(contact?.company ?? '');
+      setCategory(contact?.category ?? 'Joker');
+      setStage(contact?.stage ?? 'DNP');
+      setNextFollowup(toDateTimeLocal(contact?.next_followup));
+      setLeadNotes(contact?.notes ?? '');
+      setCampaign(contact?.campaign ?? '');
+      setPlatform(contact?.platform ?? '');
+      setAdName(contact?.ad_name ?? '');
+      setLeadSource(contact?.lead_source ?? '');
       setSelectedTagIds(contactTags.map((ct) => ct.tag_id));
       fetchTags();
     }
@@ -102,6 +132,14 @@ export function ContactForm({
             phone: phone.trim(),
             email: email.trim() || null,
             company: company.trim() || null,
+            category,
+            stage,
+            next_followup: fromDateTimeLocal(nextFollowup),
+            notes: leadNotes.trim() || null,
+            campaign: campaign.trim() || null,
+            platform: platform.trim() || null,
+            ad_name: adName.trim() || null,
+            lead_source: leadSource.trim() || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', contactId);
@@ -115,6 +153,14 @@ export function ContactForm({
             phone: phone.trim(),
             email: email.trim() || null,
             company: company.trim() || null,
+            category,
+            stage,
+            next_followup: fromDateTimeLocal(nextFollowup),
+            notes: leadNotes.trim() || null,
+            campaign: campaign.trim() || null,
+            platform: platform.trim() || null,
+            ad_name: adName.trim() || null,
+            lead_source: leadSource.trim() || null,
           })
           .select('id')
           .single();
@@ -154,7 +200,7 @@ export function ContactForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-md">
+      <DialogContent className="max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200 sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">
             {isEdit ? 'Edit Contact' : 'Add Contact'}
@@ -221,6 +267,119 @@ export function ContactForm({
               placeholder="Acme Inc."
               className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
             />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-slate-300">Category</Label>
+              <Select
+                value={category}
+                onValueChange={(value) => setCategory(value as LeadCategory)}
+              >
+                <SelectTrigger className="w-full bg-slate-800 border-slate-700 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-700">
+                  {LEAD_CATEGORIES.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">Stage</Label>
+              <Select
+                value={stage}
+                onValueChange={(value) => setStage(value as LeadStage)}
+              >
+                <SelectTrigger className="w-full bg-slate-800 border-slate-700 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-700">
+                  {LEAD_STAGES.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="cf-next-followup" className="text-slate-300">
+              Next Follow-up
+            </Label>
+            <Input
+              id="cf-next-followup"
+              type="datetime-local"
+              value={nextFollowup}
+              onChange={(e) => setNextFollowup(e.target.value)}
+              className="bg-slate-800 border-slate-700 text-white"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="cf-lead-notes" className="text-slate-300">
+              Lead Notes
+            </Label>
+            <Textarea
+              id="cf-lead-notes"
+              value={leadNotes}
+              onChange={(e) => setLeadNotes(e.target.value)}
+              placeholder="Current lead context..."
+              className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="cf-campaign" className="text-slate-300">
+                Campaign
+              </Label>
+              <Input
+                id="cf-campaign"
+                value={campaign}
+                onChange={(e) => setCampaign(e.target.value)}
+                className="bg-slate-800 border-slate-700 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cf-platform" className="text-slate-300">
+                Platform
+              </Label>
+              <Input
+                id="cf-platform"
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                placeholder="Meta, Google, LinkedIn..."
+                className="bg-slate-800 border-slate-700 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cf-ad-name" className="text-slate-300">
+                Ad
+              </Label>
+              <Input
+                id="cf-ad-name"
+                value={adName}
+                onChange={(e) => setAdName(e.target.value)}
+                className="bg-slate-800 border-slate-700 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cf-lead-source" className="text-slate-300">
+                Lead Source
+              </Label>
+              <Input
+                id="cf-lead-source"
+                value={leadSource}
+                onChange={(e) => setLeadSource(e.target.value)}
+                className="bg-slate-800 border-slate-700 text-white"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

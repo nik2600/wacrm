@@ -7,12 +7,15 @@ import {
   UserPlus,
   DollarSign,
   Send,
+  Target,
+  CalendarClock,
 } from 'lucide-react'
 
 import {
   loadActivity,
   loadConversationsSeries,
   loadMetrics,
+  loadLeadDashboard,
   loadPipelineDonut,
   loadResponseTime,
 } from '@/lib/dashboard/queries'
@@ -20,6 +23,7 @@ import type {
   ActivityItem,
   ConversationsSeriesPoint,
   MetricsBundle,
+  LeadDashboardData,
   PipelineDonutData,
   ResponseTimeSummary,
 } from '@/lib/dashboard/types'
@@ -31,12 +35,15 @@ import { ConversationsChart } from '@/components/dashboard/conversations-chart'
 import { PipelineDonut } from '@/components/dashboard/pipeline-donut'
 import { ResponseTimeChart } from '@/components/dashboard/response-time-chart'
 import { ActivityFeed } from '@/components/dashboard/activity-feed'
+import { LeadBreakdown } from '@/components/dashboard/lead-breakdown'
 
 type RangeDays = 7 | 30 | 90
 
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState<MetricsBundle | null>(null)
   const [metricsLoading, setMetricsLoading] = useState(true)
+  const [leadData, setLeadData] = useState<LeadDashboardData | null>(null)
+  const [leadDataLoading, setLeadDataLoading] = useState(true)
 
   const [range, setRange] = useState<RangeDays>(30)
   // Keep a cache per range so switching tabs doesn't re-fetch what we
@@ -68,6 +75,11 @@ export default function DashboardPage() {
       .then((m) => setMetrics(m))
       .catch((err) => console.error('[dashboard] metrics failed:', err))
       .finally(() => setMetricsLoading(false))
+
+    void loadLeadDashboard(db)
+      .then((data) => setLeadData(data))
+      .catch((err) => console.error('[dashboard] leads failed:', err))
+      .finally(() => setLeadDataLoading(false))
 
     void loadConversationsSeries(db, 30)
       .then((s) => setSeries((prev) => ({ ...prev, 30: s })))
@@ -175,6 +187,32 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {leadDataLoading || !leadData ? (
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              title="Total Leads"
+              value={leadData.totalLeads.toLocaleString()}
+              icon={Target}
+              subtitle="All contacts in lead management"
+            />
+            <MetricCard
+              title="Due Follow-ups"
+              value={leadData.dueFollowups.toLocaleString()}
+              icon={CalendarClock}
+              subtitle="Overdue and due today"
+            />
+          </>
+        )}
+      </div>
+
+      <LeadBreakdown data={leadData} loading={leadDataLoading} />
 
       {/* Quick actions */}
       <QuickActions />

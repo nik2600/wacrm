@@ -11,11 +11,14 @@ import type {
   ActivityItem,
   ConversationsSeriesPoint,
   MetricsBundle,
+  LeadDashboardData,
   PipelineDonutData,
   PipelineStageSlice,
   ResponseTimeBucket,
   ResponseTimeSummary,
 } from './types'
+import { summarizeLeads } from '@/lib/leads'
+import type { LeadCategory, LeadStage } from '@/types'
 
 // ------------------------------------------------------------
 // All client-side aggregation. RLS scopes every query to the
@@ -96,6 +99,32 @@ export async function loadMetrics(db: DB): Promise<MetricsBundle> {
       current: messagesToday.count ?? 0,
       previous: messagesYesterday.count ?? 0,
     },
+  }
+}
+
+export async function loadLeadDashboard(db: DB): Promise<LeadDashboardData> {
+  const { data, error } = await db
+    .from('contacts')
+    .select('stage, category, next_followup, campaign')
+  if (error) throw error
+
+  const rows = (data ?? []) as {
+      stage: LeadStage
+      category: LeadCategory
+      next_followup: string | null
+      campaign: string | null
+    }[]
+  const summary = summarizeLeads(rows)
+  const campaignCounts = new Map<string, number>()
+  for (const row of rows) {
+    const campaign = row.campaign?.trim() || 'Unattributed'
+    campaignCounts.set(campaign, (campaignCounts.get(campaign) ?? 0) + 1)
+  }
+  return {
+    ...summary,
+    byCampaign: [...campaignCounts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count),
   }
 }
 

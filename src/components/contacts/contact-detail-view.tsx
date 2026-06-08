@@ -3,7 +3,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
-import type { Contact, Tag, ContactTag, ContactNote, CustomField, ContactCustomValue, Deal } from '@/types';
+import type {
+  Contact,
+  Tag,
+  ContactTag,
+  ContactNote,
+  CustomField,
+  ContactCustomValue,
+  Deal,
+  LeadCategory,
+  LeadStage,
+} from '@/types';
+import {
+  fromDateTimeLocal,
+  LEAD_CATEGORIES,
+  LEAD_STAGES,
+  toDateTimeLocal,
+} from '@/lib/leads';
 import {
   Sheet,
   SheetContent,
@@ -16,6 +32,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -57,6 +80,14 @@ export function ContactDetailView({
   const [editPhone, setEditPhone] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editCompany, setEditCompany] = useState('');
+  const [editCategory, setEditCategory] = useState<LeadCategory>('Joker');
+  const [editStage, setEditStage] = useState<LeadStage>('DNP');
+  const [editNextFollowup, setEditNextFollowup] = useState('');
+  const [editLeadNotes, setEditLeadNotes] = useState('');
+  const [editCampaign, setEditCampaign] = useState('');
+  const [editPlatform, setEditPlatform] = useState('');
+  const [editAdName, setEditAdName] = useState('');
+  const [editLeadSource, setEditLeadSource] = useState('');
   const [savingDetails, setSavingDetails] = useState(false);
 
   // Tags tab
@@ -96,6 +127,14 @@ export function ContactDetailView({
       setEditPhone(data.phone);
       setEditEmail(data.email ?? '');
       setEditCompany(data.company ?? '');
+      setEditCategory(data.category ?? 'Joker');
+      setEditStage(data.stage ?? 'DNP');
+      setEditNextFollowup(toDateTimeLocal(data.next_followup));
+      setEditLeadNotes(data.notes ?? '');
+      setEditCampaign(data.campaign ?? '');
+      setEditPlatform(data.platform ?? '');
+      setEditAdName(data.ad_name ?? '');
+      setEditLeadSource(data.lead_source ?? '');
     }
     setLoading(false);
   }, [contactId, supabase]);
@@ -194,6 +233,14 @@ export function ContactDetailView({
         phone: editPhone.trim(),
         email: editEmail.trim() || null,
         company: editCompany.trim() || null,
+        category: editCategory,
+        stage: editStage,
+        next_followup: fromDateTimeLocal(editNextFollowup),
+        notes: editLeadNotes.trim() || null,
+        campaign: editCampaign.trim() || null,
+        platform: editPlatform.trim() || null,
+        ad_name: editAdName.trim() || null,
+        lead_source: editLeadSource.trim() || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', contactId);
@@ -451,6 +498,102 @@ export function ContactDetailView({
                       onChange={(e) => setEditCompany(e.target.value)}
                       className="bg-slate-800 border-slate-700 text-white h-8 text-sm"
                     />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-slate-400 text-xs">Category</Label>
+                      <Select
+                        value={editCategory}
+                        onValueChange={(value) =>
+                          setEditCategory(value as LeadCategory)
+                        }
+                      >
+                        <SelectTrigger className="w-full bg-slate-800 border-slate-700 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                          {LEAD_CATEGORIES.map((value) => (
+                            <SelectItem key={value} value={value}>
+                              {value}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-slate-400 text-xs">Stage</Label>
+                      <Select
+                        value={editStage}
+                        onValueChange={(value) =>
+                          setEditStage(value as LeadStage)
+                        }
+                      >
+                        <SelectTrigger className="w-full bg-slate-800 border-slate-700 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                          {LEAD_STAGES.map((value) => (
+                            <SelectItem key={value} value={value}>
+                              {value}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-slate-400 text-xs">
+                      Next Follow-up
+                    </Label>
+                    <Input
+                      type="datetime-local"
+                      value={editNextFollowup}
+                      onChange={(e) => setEditNextFollowup(e.target.value)}
+                      className="bg-slate-800 border-slate-700 text-white h-8 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-slate-400 text-xs">Lead Notes</Label>
+                    <Textarea
+                      value={editLeadNotes}
+                      onChange={(e) => setEditLeadNotes(e.target.value)}
+                      placeholder="Current lead context..."
+                      className="bg-slate-800 border-slate-700 text-white min-h-20 text-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-slate-400 text-xs">Campaign</Label>
+                      <Input
+                        value={editCampaign}
+                        onChange={(e) => setEditCampaign(e.target.value)}
+                        className="bg-slate-800 border-slate-700 text-white h-8 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-slate-400 text-xs">Platform</Label>
+                      <Input
+                        value={editPlatform}
+                        onChange={(e) => setEditPlatform(e.target.value)}
+                        className="bg-slate-800 border-slate-700 text-white h-8 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-slate-400 text-xs">Ad</Label>
+                      <Input
+                        value={editAdName}
+                        onChange={(e) => setEditAdName(e.target.value)}
+                        className="bg-slate-800 border-slate-700 text-white h-8 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-slate-400 text-xs">Lead Source</Label>
+                      <Input
+                        value={editLeadSource}
+                        onChange={(e) => setEditLeadSource(e.target.value)}
+                        className="bg-slate-800 border-slate-700 text-white h-8 text-sm"
+                      />
+                    </div>
                   </div>
                   <Button
                     onClick={saveDetails}

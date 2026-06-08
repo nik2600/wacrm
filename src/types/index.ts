@@ -24,9 +24,27 @@ export interface Contact {
   email?: string;
   company?: string;
   avatar_url?: string;
+  category: LeadCategory;
+  stage: LeadStage;
+  next_followup?: string | null;
+  notes?: string | null;
+  campaign?: string | null;
+  platform?: string | null;
+  ad_name?: string | null;
+  lead_source?: string | null;
   created_at: string;
   updated_at: string;
 }
+
+export type LeadCategory = 'Ace' | 'King' | 'Queen' | 'Joker';
+
+export type LeadStage =
+  | 'DNP'
+  | 'Followup'
+  | 'Meeting Scheduled'
+  | 'Send Proposal'
+  | 'Onboarded'
+  | 'Rejected';
 
 export interface Tag {
   id: string;
