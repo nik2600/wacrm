@@ -271,6 +271,7 @@ export function WhatsAppConfig() {
   }
 
   const showResetBanner = resetReason === 'token_corrupted';
+  const showMetaErrorBanner = resetReason === 'meta_api_error' && !!statusMessage;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px] mt-4">
@@ -306,6 +307,22 @@ export function WhatsAppConfig() {
                     </>
                   )}
                 </Button>
+              </div>
+            </div>
+          </Alert>
+        )}
+
+        {showMetaErrorBanner && (
+          <Alert className="bg-red-950/40 border-red-700/40">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="size-5 text-red-400 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <AlertTitle className="text-red-200 mb-1">
+                  Meta rejected this configuration
+                </AlertTitle>
+                <AlertDescription className="text-red-100/80 text-sm">
+                  {statusMessage}
+                </AlertDescription>
               </div>
             </div>
           </Alert>

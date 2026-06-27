@@ -12,28 +12,28 @@ import crypto from 'node:crypto'
  *   https://developers.facebook.com/docs/graph-api/webhooks/getting-started#verify-payloads
  *
  * Contract:
- *   `META_APP_SECRET` is **required**. If it's missing we fail closed —
+ *   `META_APP_SECRET` is required. If it's missing we fail closed -
  *   every request is rejected until the operator configures the
  *   secret. A previous version fell open with a warning log, which is
  *   unsafe for a public template: anyone who forgets the env var would
  *   be running a fully spoofable webhook.
  */
-export function verifyMetaWebhookSignature(
+export function getMetaWebhookSignatureError(
   rawBody: string,
   signatureHeader: string | null,
-): boolean {
+): string | null {
   const secret = process.env.META_APP_SECRET
   if (!secret) {
-    console.error(
-      '[webhook] META_APP_SECRET is not set — rejecting request. ' +
-        'Configure the env var (Meta → App Settings → Basic → App Secret) ' +
-        'to enable signature verification.',
+    return (
+      'META_APP_SECRET is not set. Configure the Meta App Secret in this deployment ' +
+      'before retrying webhook delivery.'
     )
-    return false
   }
 
-  if (!signatureHeader) return false
-  if (!signatureHeader.startsWith('sha256=')) return false
+  if (!signatureHeader) return 'Missing x-hub-signature-256 header.'
+  if (!signatureHeader.startsWith('sha256=')) {
+    return 'Malformed x-hub-signature-256 header. Expected sha256=<hex>.'
+  }
 
   const expected =
     'sha256=' +
@@ -41,7 +41,26 @@ export function verifyMetaWebhookSignature(
 
   const a = Buffer.from(signatureHeader)
   const b = Buffer.from(expected)
-  // Bail if lengths differ — timingSafeEqual throws otherwise.
-  if (a.length !== b.length) return false
-  return crypto.timingSafeEqual(a, b)
+
+  // Bail if lengths differ - timingSafeEqual throws otherwise.
+  if (a.length !== b.length) {
+    return 'Signature length mismatch. This usually means the App Secret is wrong.'
+  }
+  if (!crypto.timingSafeEqual(a, b)) {
+    return 'Signature mismatch. Check META_APP_SECRET and confirm Meta is posting to the current deployment.'
+  }
+
+  return null
+}
+
+export function verifyMetaWebhookSignature(
+  rawBody: string,
+  signatureHeader: string | null,
+): boolean {
+  const error = getMetaWebhookSignatureError(rawBody, signatureHeader)
+  if (error) {
+    console.error('[webhook] signature verification failed:', error)
+    return false
+  }
+  return true
 }

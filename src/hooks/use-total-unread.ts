@@ -62,7 +62,11 @@ export function useTotalUnread(): number {
           setTotal(sum);
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status !== "SUBSCRIBED") {
+          console.warn("[realtime:total-unread-realtime] status:", status);
+        }
+      });
 
     return () => {
       cancelled = true;

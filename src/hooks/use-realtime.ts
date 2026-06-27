@@ -69,6 +69,9 @@ export function useRealtime({
         }
       )
       .subscribe((status) => {
+        if (status !== "SUBSCRIBED") {
+          console.warn(`[realtime:${channelName}] status:`, status);
+        }
         setIsConnected(status === "SUBSCRIBED");
       });
 

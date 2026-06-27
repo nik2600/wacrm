@@ -374,7 +374,11 @@ export function MessageThread({
           setReactions((prev) => prev.filter((r) => r.id !== old.id));
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status !== "SUBSCRIBED") {
+          console.warn(`[realtime:reactions:${conversationId}] status:`, status);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
